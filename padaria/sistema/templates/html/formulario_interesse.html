@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-g">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padaria Sabor Divino</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #4a2c2a;
+        }
+
+        /* --- Formulário Principal --- */
+        .main-form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .email-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* --- Lista de Produtos --- */
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        /* --- Card do Produto --- */
+        .product-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            overflow: hidden; /* Para conter a imagem */
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover; /* Garante que a imagem cubra o espaço */
+            background-color: #f0f0f0;
+        }
+        .product-card-content {
+            padding: 15px;
+            flex-grow: 1; /* Faz o conteúdo crescer */
+        }
+        .product-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .product-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* --- Status (Disponível / Indisponível) --- */
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.disponivel {
+            background-color: #e0f8e9;
+            color: #1e7d3b;
+        }
+        .status.indisponivel {
+            background-color: #fdebee;
+            color: #c92a2a;
+        }
+
+        /* --- Botão de Ação --- */
+        .product-card-action {
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        .product-card button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-comprar {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-comprar:hover {
+            background-color: #218838;
+        }
+        .btn-avisar {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-avisar:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Padaria Sabor Divino</h1>
+
+        <form method="POST" class="main-form">
+            {% csrf_token %}
+
+            <h2>Informe seu e-mail para solicitar:</h2>
+            <label for="email">Seu E-mail:</label>
+            <input type="email" name="email" id="email" class="email-input" 
+                   placeholder="seu.email@exemplo.com" required>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+
+            <h2>Nossas Guloseimas</h2>
+            
+            <div class="product-list">
+                
+                {% for produto in produtos %}
+                <div class="product-card">
+                    
+                    {% if produto.imgem %}
+                        <img src="{{ produto.imgem.url }}" alt="{{ produto.nome }}">
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x200.png?text=Sem+Foto" alt="Sem foto">
+                    {% endif %}
+
+                    <div class="product-card-content">
+                        <h3>{{ produto.nome }}</h3>
+                        
+                        {% if produto.esta_disponivel %}
+                            <span class="status disponivel">Disponível</span>
+                        {% else %}
+                            <span class="status indisponivel">Indisponível</span>
+                        {% endif %}
+
+                        <p>{{ produto.descricao|default:"Sem descrição." }}</p>
+                    </div>
+
+                    <div class="product-card-action">
+                        {% if produto.esta_disponivel %}
+                            <button type="submit" name="produto_id" value="{{ produto.id }}" class="btn-comprar">
+                                Quero Comprar Agora!
+                            </button>
+                        {% else %}
+                            <button type="submit" name="produto_id" value="{{ produto.id }}" class="btn-avisar">
+                                Me avise quando chegar!
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+        </form>
+
+    </div>
+
+</body>
+</html>
