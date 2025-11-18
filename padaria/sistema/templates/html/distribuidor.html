@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Área do Distribuidor</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn-add { background: green; color: white; border: none; padding: 5px 10px; cursor: pointer;}
+    </style>
+</head>
+<body>
+    <h1>Painel de Controle - Distribuidor</h1>
+    <p>Bem-vindo, {{ user.username }} | <a href="{% url 'logout' %}">Sair</a></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Ação (Repor Estoque)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+            <tr>
+                <td>{{ produto.nome }}</td>
+                <td>
+                    {% if produto.quantidade_estoque == 0 %}
+                        <span style="color:red; font-weight:bold;">ESGOTADO (0)</span>
+                    {% else %}
+                        {{ produto.quantidade_estoque }} unidades
+                    {% endif %}
+                </td>
+                <td>
+                    <form action="{% url 'atualizar_estoque' produto.id %}" method="POST" style="display:flex; gap:5px;">
+                        {% csrf_token %}
+                        <input type="number" name="quantidade_adicional" min="1" value="10" style="width: 60px;">
+                        <button type="submit" class="btn-add">Adicionar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

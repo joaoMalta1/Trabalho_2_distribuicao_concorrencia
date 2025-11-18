@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login - Padaria Sabor Divino</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+        }
+
+        form {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4a2c2a;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3b2220;
+        }
+
+        /* Novo estilo para o link de cadastro */
+        .register-link {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #4a2c2a;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <form method="post">
+        <h2 style="text-align:center">Entrar na Padaria</h2>
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <p style="color: red; text-align: center;">Usuário ou senha incorretos.</p>
+        {% endif %}
+
+        <label>Usuário:</label>
+        {{ form.username }}
+
+        <label>Senha:</label>
+        {{ form.password }}
+
+        <button type="submit">Entrar</button>
+
+        <div class="register-link">
+            Não tem conta? <a href="{% url 'registro' %}">Cadastre-se aqui</a>
+        </div>
+    </form>
+</body>
+
+</html>
