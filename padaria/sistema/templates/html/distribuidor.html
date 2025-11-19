@@ -7,38 +7,49 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .btn-add { background: green; color: white; border: none; padding: 5px 10px; cursor: pointer;}
+        .btn-edit { background: #007bff; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-size: 14px;}
+        .btn-new { background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 15px;}
+        .actions { display: flex; gap: 10px; align-items: center; }
     </style>
 </head>
 <body>
     <h1>Painel de Controle - Distribuidor</h1>
     <p>Bem-vindo, {{ user.username }} | <a href="{% url 'logout' %}">Sair</a></p>
 
+    <a href="{% url 'cadastrar_produto' %}" class="btn-new">+ Cadastrar Nova Guloseima</a>
+
     <table>
         <thead>
             <tr>
                 <th>Produto</th>
-                <th>Estoque Atual</th>
-                <th>Ação (Repor Estoque)</th>
+                <th>Estoque</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for produto in produtos %}
             <tr>
-                <td>{{ produto.nome }}</td>
+                <td>
+                    <strong>{{ produto.nome }}</strong><br>
+                    <small>{{ produto.descricao|truncatechars:50 }}</small>
+                </td>
                 <td>
                     {% if produto.quantidade_estoque == 0 %}
-                        <span style="color:red; font-weight:bold;">ESGOTADO (0)</span>
+                        <span style="color:red; font-weight:bold;">ESGOTADO</span>
                     {% else %}
-                        {{ produto.quantidade_estoque }} unidades
+                        {{ produto.quantidade_estoque }} un
                     {% endif %}
                 </td>
                 <td>
-                    <form action="{% url 'atualizar_estoque' produto.id %}" method="POST" style="display:flex; gap:5px;">
-                        {% csrf_token %}
-                        <input type="number" name="quantidade_adicional" min="1" value="10" style="width: 60px;">
-                        <button type="submit" class="btn-add">Adicionar</button>
-                    </form>
+                    <div class="actions">
+                        <a href="{% url 'editar_produto' produto.id %}" class="btn-edit">Editar Tudo</a>
+
+                        <form action="{% url 'atualizar_estoque' produto.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantidade_adicional" value="10">
+                            <button type="submit" style="cursor:pointer;">+10 Rápido</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

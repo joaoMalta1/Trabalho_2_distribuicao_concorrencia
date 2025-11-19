@@ -3,7 +3,7 @@ from .models import Produto, SolicitacaoNotificacao
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Produto
-from .forms import CadastroUsuarioForm 
+from .forms import CadastroUsuarioForm, ProdutoForm
 from django.contrib.auth import login
 
 
@@ -15,7 +15,7 @@ def eh_distribuidor(user):
 def home(request):
     if request.user.eh_distribuidor:
         produtos = Produto.objects.all()
-        return render(request, 'html/dashboard_distribuidor.html', {'produtos': produtos})
+        return render(request, 'html/distribuidor.html', {'produtos': produtos})
     else:
         produtos = Produto.objects.all()
         return render(request, 'html/formulario_interesse.html', {
@@ -90,3 +90,36 @@ def solicitar_produto(request):
     # Se for GET, apenas mostra a página com o formulário
     produtos = Produto.objects.all()
     return render(request, 'formulario_interesse.html', {'produtos': produtos})
+
+
+@login_required
+@user_passes_test(eh_distribuidor)
+def cadastrar_produto(request):
+    if request.method == 'POST':
+        # request.FILES é obrigatório para salvar a imagem
+        form = ProdutoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = ProdutoForm()
+    return render(request, 'html/form_produto.html', {'form': form, 'titulo': 'Novo Produto'})
+
+
+@login_required
+@user_passes_test(eh_distribuidor)
+def editar_produto(request, produto_id):
+    # Pegamos o produto ou damos erro 404 se não existir
+    produto = get_object_or_404(Produto, id=produto_id)
+    
+    if request.method == 'POST':
+        # Passamos 'instance=produto' para o Django saber que é uma ATUALIZAÇÃO, não criação
+        form = ProdutoForm(request.POST, request.FILES, instance=produto)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        # Preenche o formulário com os dados atuais do produto
+        form = ProdutoForm(instance=produto)
+    
+    return render(request, 'html/form_produto.html', {'form': form, 'titulo': f'Editar {produto.nome}'})

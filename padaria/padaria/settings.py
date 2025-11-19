@@ -27,8 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'sistema.Usuario'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
