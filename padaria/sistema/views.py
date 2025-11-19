@@ -5,15 +5,47 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Produto
 from .forms import CadastroUsuarioForm, ProdutoForm
 from django.contrib.auth import login
-
+import requests, os
 
 
 def eh_distribuidor(user):
     return user.eh_distribuidor or user.is_superuser
 
+def notifica(crud):
+    # if crud == 'create':
+    #     print("Criou um novo produto")
+    # elif crud == 'tem em estoque':
+    #     print("Atualizou um produto")
+    # elif crud == 'delete':
+    #     print("Deletou um produto")
+    # elif crud == 'saiu estoque':
+    #     print("Produto saiu do estoque")
+    url = os.getenv("LAMBRA_URL")
+
+    payload = {
+        "tipo_alteracao": "chegou",
+        "distribuidor": "Pãozinho bom",
+        "produto_nome": "Açucar"
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("Sucesso!")
+            print(response.json()) 
+        else:
+            print(f"Erro {response.status_code}:")
+            print(response.text)
+
+    except Exception as e:
+        print(f"Erro na requisição: {e}")
+
+
+
+
 @login_required
 def home(request):
     if request.user.eh_distribuidor:
+        # notifica('tem em estoque') ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
         produtos = Produto.objects.all()
         return render(request, 'html/distribuidor.html', {'produtos': produtos})
     else:
@@ -58,7 +90,6 @@ def solicitar_produto(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         produto_id = request.POST.get('produto_id')
-        
         produto = Produto.objects.get(id=produto_id)
 
         # AQUI ESTÁ A LÓGICA PRINCIPAL:

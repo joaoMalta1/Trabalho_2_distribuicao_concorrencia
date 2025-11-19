@@ -10,10 +10,7 @@ class CadastroUsuarioForm(UserCreationForm):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        # Listamos os campos que o distribuidor pode mexer
         fields = ['nome', 'descricao', 'quantidade_estoque', 'imgem']
-        
-        # Opcional: deixar o visual mais bonito com widgets
         widgets = {
             'descricao': forms.Textarea(attrs={'rows': 3}),
         }
