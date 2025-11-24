@@ -6,6 +6,8 @@ from .models import Produto
 from .forms import CadastroUsuarioForm, ProdutoForm
 from django.contrib.auth import login
 import requests, os
+from dotenv import load_dotenv
+
 
 
 def eh_distribuidor(user):
@@ -20,8 +22,9 @@ def notifica(crud):
     #     print("Deletou um produto")
     # elif crud == 'saiu estoque':
     #     print("Produto saiu do estoque")
-    url = os.getenv("LAMBRA_URL")
-
+    load_dotenv()
+    url = os.getenv("LAMBD_URL")
+    print(url)
     payload = {
         "tipo_alteracao": "chegou",
         "distribuidor": "Pãozinho bom",
@@ -45,7 +48,7 @@ def notifica(crud):
 @login_required
 def home(request):
     if request.user.eh_distribuidor:
-        # notifica('tem em estoque') ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
+        notifica('tem em estoque') #ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
         produtos = Produto.objects.all()
         return render(request, 'html/distribuidor.html', {'produtos': produtos})
     else:
