@@ -1,11 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     quantidade_estoque = models.PositiveIntegerField(default=0)
     imgem = models.ImageField(upload_to='produtos/', blank=True, null=True)
+    distribuidor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.nome

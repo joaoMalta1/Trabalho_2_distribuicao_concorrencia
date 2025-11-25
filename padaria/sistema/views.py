@@ -49,7 +49,7 @@ def notifica(crud):
 def home(request):
     if request.user.eh_distribuidor:
         notifica('tem em estoque') #ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
-        produtos = Produto.objects.all()
+        produtos = Produto.objects.filter(distribuidor=request.user)
         return render(request, 'html/distribuidor.html', {'produtos': produtos})
     else:
         produtos = Produto.objects.all()
@@ -63,13 +63,12 @@ def home(request):
 @user_passes_test(eh_distribuidor) # Bloqueia se não for distribuidor
 def atualizar_estoque(request, produto_id):
     if request.method == 'POST':
-        produto = get_object_or_404(Produto, id=produto_id)
-        nova_quantidade = int(request.POST.get('quantidade_adicional'))
+        # MUDANÇA 4: Segurança aqui também. Só repõe estoque do que é seu.
+        produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
         
-        # Atualiza o estoque
+        nova_quantidade = int(request.POST.get('quantidade_adicional'))
         produto.quantidade_estoque += nova_quantidade
         produto.save() 
-        # O sinal (signals.py) será disparado aqui automaticamente!
         
     return redirect('home')
 
@@ -130,30 +129,30 @@ def solicitar_produto(request):
 @user_passes_test(eh_distribuidor)
 def cadastrar_produto(request):
     if request.method == 'POST':
-        # request.FILES é obrigatório para salvar a imagem
         form = ProdutoForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            produto = form.save(commit=False)
+            produto.distribuidor = request.user
+            produto.save()
             return redirect('home')
     else:
         form = ProdutoForm()
+    
     return render(request, 'html/form_produto.html', {'form': form, 'titulo': 'Novo Produto'})
-
 
 @login_required
 @user_passes_test(eh_distribuidor)
 def editar_produto(request, produto_id):
-    # Pegamos o produto ou damos erro 404 se não existir
-    produto = get_object_or_404(Produto, id=produto_id)
+    # MUDANÇA 3: Só permite pegar o produto se o ID for correto E o dono for o usuário logado
+    # Se ele tentar editar o produto de outro, vai dar Erro 404 (Não encontrado)
+    produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
     
     if request.method == 'POST':
-        # Passamos 'instance=produto' para o Django saber que é uma ATUALIZAÇÃO, não criação
         form = ProdutoForm(request.POST, request.FILES, instance=produto)
         if form.is_valid():
             form.save()
             return redirect('home')
     else:
-        # Preenche o formulário com os dados atuais do produto
         form = ProdutoForm(instance=produto)
     
     return render(request, 'html/form_produto.html', {'form': form, 'titulo': f'Editar {produto.nome}'})
