@@ -96,6 +96,11 @@ def solicitar_produto(request):
             return HttpResponse('funcionou')
 
         else:
+            try:
+                notifica(produto.nome,'chegou', produto.distribuidor.username)
+            except Exception as e:
+                print(f"Erro ao chamar notifica: {e}")
+
             SolicitacaoNotificacao.objects.create(
                 produto=produto,
                 email_cliente=email,
@@ -125,7 +130,7 @@ def cadastrar_produto(request):
 @user_passes_test(eh_distribuidor)
 def editar_produto(request, produto_id):
     produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
-    
+
     if request.method == 'POST':
         form = ProdutoForm(request.POST, request.FILES, instance=produto)
         if form.is_valid():

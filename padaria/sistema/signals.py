@@ -22,10 +22,6 @@ def notificar_clientes_na_reposicao(sender, instance, created, **kwargs):
             solicitacao.save()
 
         if emails_para_enviar:
-            try:
-                notifica(produto.nome,'chegou', produto.distribuidor.username)
-            except Exception as e:
-                print(f"Erro ao chamar notifica: {e}")
             send_mail(
                 f'O item {produto.nome} chegou!',
                 f'Olá! O item {produto.nome} que você estava esperando chegou na padaria.',
