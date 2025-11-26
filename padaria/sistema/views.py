@@ -13,22 +13,14 @@ from django.http import HttpResponse
 def eh_distribuidor(user):
     return user.eh_distribuidor or user.is_superuser
 
-def notifica(crud):
-    # if crud == 'create':
-    #     print("Criou um novo produto")
-    # elif crud == 'tem em estoque':
-    #     print("Atualizou um produto")
-    # elif crud == 'delete':
-    #     print("Deletou um produto")
-    # elif crud == 'saiu estoque':
-    #     print("Produto saiu do estoque")
+def notifica(produto_nome,tipo_alteracao, distribuidor):
     load_dotenv()
-    url = os.getenv("LAMBD_URL")
+    url = os.getenv("LAMBDA_URL")
     print(url)
     payload = {
-        "tipo_alteracao": "chegou",
-        "distribuidor": "Pãozinho bom",
-        "produto_nome": "Açucar"
+        "tipo_alteracao": tipo_alteracao,
+        "distribuidor":     distribuidor,
+        "produto_nome":   produto_nome
     }
     try:
         response = requests.post(url, json=payload)
@@ -58,14 +50,11 @@ def home(request):
             'email_inicial': request.user.email
         })
 
-# View exclusiva para Distribuidores atualizarem estoque
 @login_required
-@user_passes_test(eh_distribuidor) # Bloqueia se não for distribuidor
+@user_passes_test(eh_distribuidor) 
 def atualizar_estoque(request, produto_id):
     if request.method == 'POST':
-        # MUDANÇA 4: Segurança aqui também. Só repõe estoque do que é seu.
         produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
-        
         nova_quantidade = int(request.POST.get('quantidade_adicional'))
         produto.quantidade_estoque += nova_quantidade
         produto.save() 
@@ -75,11 +64,9 @@ def atualizar_estoque(request, produto_id):
 
 def registro(request):
     if request.method == 'POST':
-        # Usamos o nosso form customizado
         form = CadastroUsuarioForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # O campo eh_distribuidor já foi salvo automaticamente pelo form!
             login(request, user)
             return redirect('home')
     else:
@@ -95,20 +82,20 @@ def solicitar_produto(request):
         produto = Produto.objects.get(id=produto_id)
 
         if produto.esta_disponivel:
-            # CENÁRIO 1: Item está disponível
+            try:
+                notifica(produto.nome,'disponivel', produto.distribuidor.username)
+            except Exception as e:
+                print(f"Erro ao chamar notifica: {e}")
+            
             send_mail(
                 f'Seu item {produto.nome} está disponível!',
                 'Olá! O item que você queria está disponível. Venha buscar na padaria.',
                 'padaria@exemplo.com',
                 [email],
             )
-            # Retorna uma página de sucesso
             return HttpResponse('funcionou')
 
         else:
-            # CENÁRIO 2: Item não está disponível
-            
-            # Cria um registro de "lista de espera"
             SolicitacaoNotificacao.objects.create(
                 produto=produto,
                 email_cliente=email,
@@ -137,8 +124,6 @@ def cadastrar_produto(request):
 @login_required
 @user_passes_test(eh_distribuidor)
 def editar_produto(request, produto_id):
-    # MUDANÇA 3: Só permite pegar o produto se o ID for correto E o dono for o usuário logado
-    # Se ele tentar editar o produto de outro, vai dar Erro 404 (Não encontrado)
     produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
     
     if request.method == 'POST':
