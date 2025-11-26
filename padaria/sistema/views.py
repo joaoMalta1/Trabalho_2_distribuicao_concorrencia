@@ -7,7 +7,7 @@ from .forms import CadastroUsuarioForm, ProdutoForm
 from django.contrib.auth import login
 import requests, os
 from dotenv import load_dotenv
-
+from django.http import HttpResponse
 
 
 def eh_distribuidor(user):
@@ -48,7 +48,7 @@ def notifica(crud):
 @login_required
 def home(request):
     if request.user.eh_distribuidor:
-        notifica('tem em estoque') #ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
+        #notifica('tem em estoque') #ERA PRA TESTAR SÓ provavelmente a notifia vai mandar pra signals 
         produtos = Produto.objects.filter(distribuidor=request.user)
         return render(request, 'html/distribuidor.html', {'produtos': produtos})
     else:
@@ -94,8 +94,6 @@ def solicitar_produto(request):
         produto_id = request.POST.get('produto_id')
         produto = Produto.objects.get(id=produto_id)
 
-        # AQUI ESTÁ A LÓGICA PRINCIPAL:
-        
         if produto.esta_disponivel:
             # CENÁRIO 1: Item está disponível
             send_mail(
@@ -105,7 +103,7 @@ def solicitar_produto(request):
                 [email],
             )
             # Retorna uma página de sucesso
-            return render(request, 'sucesso_disponivel.html')
+            return HttpResponse('funcionou')
 
         else:
             # CENÁRIO 2: Item não está disponível
@@ -117,10 +115,7 @@ def solicitar_produto(request):
                 status='pendente'
             )
             
-            # Apenas informa o usuário que ele será notificado
-            return render(request, 'sucesso_indisponivel.html')
-
-    # Se for GET, apenas mostra a página com o formulário
+            return HttpResponse('segura')
     produtos = Produto.objects.all()
     return render(request, 'formulario_interesse.html', {'produtos': produtos})
 
@@ -137,7 +132,6 @@ def cadastrar_produto(request):
             return redirect('home')
     else:
         form = ProdutoForm()
-    
     return render(request, 'html/form_produto.html', {'form': form, 'titulo': 'Novo Produto'})
 
 @login_required

@@ -6,13 +6,8 @@ from .models import Produto, SolicitacaoNotificacao
 
 @receiver(post_save, sender=Produto)
 def notificar_clientes_na_reposicao(sender, instance, created, **kwargs):
-    # 'instance' é o objeto Produto que acabou de ser salvo
     produto = instance
 
-    # Verifica se o produto AGORA está disponível E se ele não estava disponível antes
-    # (Usamos 'update_fields' para saber se o estoque foi alterado, 
-    # ou podemos checar o histórico, mas o simples é checar se ficou > 0)
-    
     if produto.esta_disponivel:
         # Busca todas as solicitações pendentes para este produto
         solicitacoes_pendentes = SolicitacaoNotificacao.objects.filter(
@@ -23,8 +18,7 @@ def notificar_clientes_na_reposicao(sender, instance, created, **kwargs):
         emails_para_enviar = []
         for solicitacao in solicitacoes_pendentes:
             emails_para_enviar.append(solicitacao.email_cliente)
-            
-            # Marca como 'notificado' para não enviar de novo
+
             solicitacao.status = 'notificado'
             solicitacao.save()
 

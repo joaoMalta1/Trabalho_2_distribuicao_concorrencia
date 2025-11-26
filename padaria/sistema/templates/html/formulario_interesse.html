@@ -132,9 +132,8 @@
     <div class="container">
         <h1>Padaria Sabor Divino</h1>
 
-        <form method="POST" class="main-form">
-            {% csrf_token %}
-
+            <form method="POST" action="{% url 'solicitar_produto' %}" class="main-form">
+                {% csrf_token %}
             <h2>Informe seu e-mail para solicitar:</h2>
             <label for="email">Seu E-mail:</label>
             <input type="email" name="email" id="email" class="email-input" 
