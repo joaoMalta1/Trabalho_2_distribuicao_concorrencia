@@ -148,10 +148,10 @@
                 {% for produto in produtos %}
                 <div class="product-card">
                     
-                    {% if produto.imgem %}
-                        <img src="{{ produto.imgem.url }}" alt="{{ produto.nome }}">
+                    {% if produto.imagem_base64 %}
+                        <img src="data:image/jpeg;base64,{{ produto.imagem_base64 }}" alt="{{ produto.nome }}">
                     {% else %}
-                        <img src="https://via.placeholder.com/300x200.png?text=Sem+Foto" alt="Sem foto">
+                        <img src="https://via.placeholder.com/300x200?text=Sem+Foto" alt="Sem Foto">
                     {% endif %}
 
                     <div class="product-card-content">

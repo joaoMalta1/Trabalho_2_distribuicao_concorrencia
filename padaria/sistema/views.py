@@ -8,7 +8,9 @@ from django.contrib.auth import login
 import requests, os
 from dotenv import load_dotenv
 from django.http import HttpResponse
-
+from django.contrib import messages
+from django.conf import settings
+import base64
 
 def eh_distribuidor(user):
     return user.eh_distribuidor or user.is_superuser
@@ -86,7 +88,7 @@ def solicitar_produto(request):
                 notifica(produto.nome,'disponivel', produto.distribuidor.username)
             except Exception as e:
                 print(f"Erro ao chamar notifica: {e}")
-            
+
             send_mail(
                 f'Seu item {produto.nome} está disponível!',
                 'Olá! O item que você queria está disponível. Venha buscar na padaria.',
@@ -94,19 +96,16 @@ def solicitar_produto(request):
                 [email],
             )
             return HttpResponse('funcionou')
-
         else:
             try:
                 notifica(produto.nome,'chegou', produto.distribuidor.username)
             except Exception as e:
                 print(f"Erro ao chamar notifica: {e}")
-
             SolicitacaoNotificacao.objects.create(
                 produto=produto,
                 email_cliente=email,
                 status='pendente'
             )
-            
             return HttpResponse('segura')
     produtos = Produto.objects.all()
     return render(request, 'formulario_interesse.html', {'produtos': produtos})
@@ -116,9 +115,36 @@ def solicitar_produto(request):
 @user_passes_test(eh_distribuidor)
 def cadastrar_produto(request):
     if request.method == 'POST':
+        load_dotenv()
         form = ProdutoForm(request.POST, request.FILES)
+
         if form.is_valid():
             produto = form.save(commit=False)
+            arquivo_upload = request.FILES.get('arquivo_imagem')
+            if arquivo_upload:
+                try:
+                    arquivos = {
+                        'file': (arquivo_upload.name, arquivo_upload, arquivo_upload.content_type)}
+
+                    response = requests.post(
+                        os.getenv("LAMBD_IMG"), 
+                        files=arquivos,
+                        timeout=10
+                    )
+
+                    if response.status_code == 200:
+                        dados = response.json()
+                        produto.imagem_base64 = dados.get('base64')
+                        print("--- Conversão feita com sucesso pela AWS! ---")
+                    else:
+                        print(f"Erro Lambda: {response.text}")
+                        messages.error(request, "A AWS recusou a imagem. Verifique o formato.")
+                        return render(request, 'html/form_produto.html', {'form': form, 'titulo': 'Novo Produto'})
+                
+                except requests.exceptions.RequestException as e:
+                    print(f"Erro de conexão com AWS: {e}")
+                    messages.error(request, "Erro ao conectar com a nuvem.")
+                    return render(request, 'html/form_produto.html', {'form': form, 'titulo': 'Novo Produto'})
             produto.distribuidor = request.user
             produto.save()
             return redirect('home')
@@ -130,7 +156,6 @@ def cadastrar_produto(request):
 @user_passes_test(eh_distribuidor)
 def editar_produto(request, produto_id):
     produto = get_object_or_404(Produto, id=produto_id, distribuidor=request.user)
-
     if request.method == 'POST':
         form = ProdutoForm(request.POST, request.FILES, instance=produto)
         if form.is_valid():
@@ -138,5 +163,4 @@ def editar_produto(request, produto_id):
             return redirect('home')
     else:
         form = ProdutoForm(instance=produto)
-    
     return render(request, 'html/form_produto.html', {'form': form, 'titulo': f'Editar {produto.nome}'})
