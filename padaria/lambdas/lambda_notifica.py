@@ -6,30 +6,37 @@ sns_client = boto3.client('sns')
 
 def lambda_handler(event, context):
     """
-    Lambda 2: Recebe dados, formata a mensagem e publica no SNS.
+    Lambda 2: Recebe a mensagem pronta e dispara no SNS (email).
     """
-    topic_arn = os.environ.get('TOPIC_ARN')
-    produto = event.get("produto_nome", "Produto Desconhecido")
-    alteracao = event.get("tipo_alteracao", 0)
-    distribuidor = event.get("distribuidor", "Distribuidor N/A")
-
-    subject = f"Alerta de Alteração: {produto}"
-    message_text = f"O produto {produto} sofreu uma alteração de quantidade/status ({alteracao}) pelo distribuidor {distribuidor}."
-
     try:
+        topic_arn = os.environ.get('TOPIC_ARN')
+        mensagem = event.get("mensagem")
+
+        if not mensagem:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"erro": "Campo 'mensagem' não recebido"})
+            }
+
+        subject = "Atualização de Produto"
+
         response = sns_client.publish(
             TopicArn=topic_arn,
-            Message=message_text,
+            Message=mensagem,
             Subject=subject
         )
-        
+
         print(f"Email enviado via SNS. ID: {response['MessageId']}")
+
         return {
             "status": "sucesso",
-            "sns_message_id": response['MessageId'],
-            "mensagem_enviada": message_text
+            "sns_message_id": response["MessageId"],
+            "mensagem_enviada": mensagem
         }
 
     except Exception as e:
         print(f"Erro ao enviar SNS: {e}")
-        raise e
+        return {
+            "status": "erro",
+            "erro": str(e)
+        }

@@ -15,10 +15,9 @@ import base64
 def eh_distribuidor(user):
     return user.eh_distribuidor or user.is_superuser
 
-def notifica(produto_nome,tipo_alteracao, distribuidor):
+def notifica(produto_nome, tipo_alteracao, distribuidor):
     load_dotenv()
     url = os.getenv("LAMBDA_URL")
-    print(url)
     payload = {
         "tipo_alteracao": tipo_alteracao,
         "distribuidor":     distribuidor,
@@ -27,7 +26,6 @@ def notifica(produto_nome,tipo_alteracao, distribuidor):
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("Sucesso!")
             print(response.json()) 
         else:
             print(f"Erro {response.status_code}:")
@@ -88,17 +86,11 @@ def solicitar_produto(request):
                 notifica(produto.nome,'disponivel', produto.distribuidor.username)
             except Exception as e:
                 print(f"Erro ao chamar notifica: {e}")
+            return redirect('home')
 
-            send_mail(
-                f'Seu item {produto.nome} está disponível!',
-                'Olá! O item que você queria está disponível. Venha buscar na padaria.',
-                'padaria@exemplo.com',
-                [email],
-            )
-            return HttpResponse('funcionou')
         else:
             try:
-                notifica(produto.nome,'chegou', produto.distribuidor.username)
+                notifica(produto.nome,'sem estoque', produto.distribuidor.username)
             except Exception as e:
                 print(f"Erro ao chamar notifica: {e}")
             SolicitacaoNotificacao.objects.create(
@@ -106,7 +98,7 @@ def solicitar_produto(request):
                 email_cliente=email,
                 status='pendente'
             )
-            return HttpResponse('segura')
+            return redirect('home')
     produtos = Produto.objects.all()
     return render(request, 'formulario_interesse.html', {'produtos': produtos})
 

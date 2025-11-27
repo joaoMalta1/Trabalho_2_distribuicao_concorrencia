@@ -17,14 +17,8 @@ def notificar_clientes_na_reposicao(sender, instance, created, **kwargs):
         emails_para_enviar = []
         for solicitacao in solicitacoes_pendentes:
             emails_para_enviar.append(solicitacao.email_cliente)
-
+            notifica(produto.nome,'abastecido', produto.distribuidor.username)
             solicitacao.status = 'notificado'
             solicitacao.save()
 
-        if emails_para_enviar:
-            send_mail(
-                f'O item {produto.nome} chegou!',
-                f'Olá! O item {produto.nome} que você estava esperando chegou na padaria.',
-                'padaria@exemplo.com',
-                emails_para_enviar, # Lista de e-mails
-            )
+
