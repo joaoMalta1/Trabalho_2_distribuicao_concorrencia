@@ -22,10 +22,17 @@ def lambda_handler(event, context):
                 f"O produto '{produto_alterado}' do distribuidor '{distribuidor}' "
                 f"já está disponível! Você já pode ir até a loja para realizar a compra."
             )
+
+        elif alteracao == "abastecido":
+            mensagem = (
+                f"Boas notícias! O produto '{produto_alterado}' do distribuidor "
+                f"'{distribuidor}' foi reabastecido e agora está disponível para compra. "
+            )
+
         else:
             mensagem = (
                 f"O distribuidor '{distribuidor}' ainda não possui o produto "
-                f"'{produto_alterado}' sem estoque. Assim que estiver disponível você será avisado."
+                f"'{produto_alterado}' em estoque. Assim que estiver disponível você será avisado."
             )
 
         payload = {

@@ -24,7 +24,7 @@ class Usuario(AbstractUser):
 class SolicitacaoNotificacao(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     email_cliente = models.EmailField()
-    status = models.CharField(max_length=20, default='pendente') # pendente, notificado
+    status = models.CharField(max_length=20, default='pendente') # pendente, notificado, abastecido
 
     def __str__(self):
         return f"{self.email_cliente} quer {self.produto.nome}"
